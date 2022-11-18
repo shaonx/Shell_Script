@@ -50,6 +50,7 @@ if [ ! -x "backup" ]; then
     if [ -f ~/.ssh/authorized_keys ];then
         cp ~/.ssh/authorized_keys backup/authorized_keys.bak
     fi
+    cp /etc/login.defs backup/login.defs
     cp /etc/pam.d/sshd backup/sshd.bak
     cp /etc/sudoers backup/sudoers.bak
     cp /etc/ssh/sshd_config backup/sshd_config.bak
@@ -77,6 +78,7 @@ fi
 if [ -f backup/authorized_keys.bak ];then
     cp -rf backup/authorized_keys.bak ~/.ssh/authorized_keys
 fi
+    cp -rf backup/login.defs /etc/login.defs
     cp -rf backup/sshd.bak /etc/pam.d/sshd
     cp -rf backup/sudoers.bak /etc/sudoers
     cp -rf backup/sshd_config.bak /etc/ssh/sshd_config
@@ -92,6 +94,11 @@ function password(){
     echo "#########################################################################################"
     echo -e "\033[1;31m	   2、 set password complexity requirements	\033[0m"
     echo "#########################################################################################"
+
+sed -i 's/^PASS_MAX_DAYS.*/PASS_MAX_DAYS 90/g' /etc/login.defs
+sed -i 's/^PASS_MIN_DAYS.*/PASS_MIN_DAYS 1/g' /etc/login.defs
+sed -i 's/^PASS_MIN_LEN.*/PASS_MIN_LEN 8/g' /etc/login.defs
+sed -i 's/^PASS_WARN_AGE.*/PASS_WARN_AGE 7/g' /etc/login.defs
 
 if [ -f /etc/pam.d/system-auth ];then
     config="/etc/pam.d/system-auth"
@@ -244,7 +251,7 @@ function set_history_tmout(){
         echo -e '\033[1;31m	    HISTTIMEFORMAT has been set to "Number-Time-User-Command"	    \033[0m'
 	#TIME_OUT
         read -p "set shell TMOUT?[300-600]seconds:" tmout 
-	: ${tmout:=600}
+	: ${tmout:=900}
         grep -i "^TMOUT=" /etc/profile	> /dev/null
         if [ $? == 0 ];then
             sed -i "s/^TMOUT=.*$/TMOUT=$tmout/g" /etc/profile
